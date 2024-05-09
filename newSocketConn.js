@@ -56,7 +56,7 @@ const webSocketConn = (server) => {
         // console.log(token);
 
         if (token) {
-          jwt.verify(token, process.env.JWT_PRIVATE_KEY, {}, (err, decoded) => {
+          jwt.verify(token, process.env.ACCESS_PRIVATE_KEY, {}, (err, decoded) => {
             if (err) {
               console.log(err);
               throw err;

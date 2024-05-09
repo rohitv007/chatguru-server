@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const asyncHandler = require("express-async-handler");
 
 const connectDB = asyncHandler(async () => {
-  const uri = process.env.MONGODB_URL;
+  const uri = process.env.DATABASE_URI;
 
   try {
     const conn = await mongoose.connect(uri);

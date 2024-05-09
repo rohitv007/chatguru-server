@@ -1,6 +1,3 @@
-const allowedOrigins = [
-    'https://chatguru.onrender.com',
-    process.env.CLIENT_URL
-]
+const allowedOrigins = ["https://chatguru.onrender.com"];
 
-module.exports = allowedOrigins
+module.exports = allowedOrigins;

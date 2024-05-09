@@ -13,7 +13,7 @@ const checkUser = asyncHandler(async (req, res, next) => {
   // console.log('TOKEN =>', token);
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_PRIVATE_KEY);
+    const decoded = jwt.verify(token, process.env.ACCESS_PRIVATE_KEY);
     // console.log("decoded user =>", decoded);
 
     // Check if the user exists
