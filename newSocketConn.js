@@ -10,12 +10,17 @@ const webSocketConn = (server) => {
     "connection",
     asyncHandler(async (connection, req) => {
       console.log("Client connected");
-      // console.log("ws-1", req.headers.cookie);
 
       function notifyAboutOnlineUsers() {
-        console.log([...wss.clients].map((c) => c.userId));
-        console.log([...wss.clients].map((c) => c.username));
-        
+        console.log(
+          "IDs =>",
+          [...wss.clients].map((c) => c.userId)
+        );
+        console.log(
+          "USERS",
+          [...wss.clients].map((c) => c.username)
+        );
+
         [...wss.clients].forEach((client) => {
           client.send(
             JSON.stringify({
@@ -56,7 +61,7 @@ const webSocketConn = (server) => {
           curr.includes("tokenCookie=")
         );
         const token = accessCookie ? accessCookie.split("=")[1] : null;
-        // console.log(token);
+        console.log('TOKEN', token);
 
         if (token) {
           jwt.verify(
@@ -68,7 +73,7 @@ const webSocketConn = (server) => {
                 console.log(err);
                 throw err;
               }
-              // console.log(decoded);
+              console.log('DECODED data =>', decoded);
               // assigning user's id and name to connection
               connection.userId = decoded.id;
               connection.username = decoded.username;
