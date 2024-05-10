@@ -56,16 +56,21 @@ const webSocketConn = (server) => {
         // console.log(token);
 
         if (token) {
-          jwt.verify(token, process.env.ACCESS_PRIVATE_KEY, {}, (err, decoded) => {
-            if (err) {
-              console.log(err);
-              throw err;
+          jwt.verify(
+            token,
+            process.env.ACCESS_PRIVATE_KEY,
+            {},
+            (err, decoded) => {
+              if (err) {
+                console.log(err);
+                throw err;
+              }
+              // console.log(decoded);
+              // assigning user's id and name to connection
+              connection.userId = decoded.id;
+              connection.username = decoded.username;
             }
-            // console.log(decoded);
-            // assigning user's id and name to connection
-            connection.userId = decoded.id;
-            connection.username = decoded.username;
-          });
+          );
         }
       }
 
