@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const asyncHandler = require("express-async-handler");
+const path = require("path");
 const authRouter = require("./routes/auth.router");
 const connectDB = require("./config/connectDB");
 const { checkUser } = require("./middleware/auth.middleware");
@@ -21,6 +22,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(express.static(path.join(__dirname, "../client/dist")));
 
 app.get(
   "/profile",
@@ -70,9 +72,13 @@ app.get("/", (req, res) => {
 
 app.use(authRouter);
 
-app.all("*", (req, res) =>
-  res.status(404).send("Error 404! Please go to the correct page")
-);
+// app.all("*", (req, res) =>
+//   res.status(404).send("Error 404! Please go to the correct page")
+// );
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
+});
 
 const server = app.listen(PORT, () =>
   console.log(`Chat app listening on port ${PORT}`)
