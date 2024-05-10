@@ -13,6 +13,9 @@ const webSocketConn = (server) => {
       // console.log("ws-1", req.headers.cookie);
 
       function notifyAboutOnlineUsers() {
+        console.log([...wss.clients].map((c) => c.userId));
+        console.log([...wss.clients].map((c) => c.username));
+        
         [...wss.clients].forEach((client) => {
           client.send(
             JSON.stringify({
@@ -81,7 +84,7 @@ const webSocketConn = (server) => {
         "message",
         asyncHandler(async (message) => {
           const messageData = JSON.parse(message);
-          // console.log(messageData);
+          console.log(messageData);
           const { recipient, text } = messageData.messagePayload;
           if (recipient && text) {
             const messageDoc = await MessageModel.create({
