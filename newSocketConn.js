@@ -12,14 +12,8 @@ const webSocketConn = (server) => {
       console.log("Client connected");
 
       function notifyAboutOnlineUsers() {
-        console.log(
-          "IDs =>",
-          [...wss.clients].map((c) => c.userId)
-        );
-        console.log(
-          "USERS",
-          [...wss.clients].map((c) => c.username)
-        );
+        console.log("ID =>", [...wss.clients].map((c) => c.userId));
+        console.log("USERS =>",[...wss.clients].map((c) => c.username));
 
         [...wss.clients].forEach((client) => {
           client.send(

@@ -24,7 +24,7 @@ const connectDB = asyncHandler(async () => {
 
     while (retries < maxRetries) {
       try {
-        await new Promise((resolve) => setTimeout(() => resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 5000));
         await mongoose.connect(uri);
         console.log("Database connection successful after retry.");
         break;
