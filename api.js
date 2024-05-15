@@ -22,7 +22,6 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "../client/dist")));
 
 app.get(
   "/profile",
@@ -72,13 +71,9 @@ app.get("/", (req, res) => {
 
 app.use(authRouter);
 
-// app.all("*", (req, res) =>
-//   res.status(404).send("Error 404! Please go to the correct page")
-// );
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../client/dist", "index.html"));
-});
+app.all("*", (req, res) =>
+  res.status(404).send("Error 404! Please go to the correct page")
+);
 
 const server = app.listen(PORT, () =>
   console.log(`Chat app listening on port ${PORT}`)
