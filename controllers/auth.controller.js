@@ -99,6 +99,7 @@ const loginUser = asyncHandler(async (req, res) => {
     res.cookie("tokenCookie", accessToken, {
       httpOnly: true,
       secure: true,
+      sameSite: 'strict',
       maxAge: MAX_AGE * 1000, // unit - milliseconds
     });
 
