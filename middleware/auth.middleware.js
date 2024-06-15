@@ -1,8 +1,8 @@
 const jwt = require("jsonwebtoken");
-const UserModel = require("../models/user.model");
+const User = require("../models/UserModel");
 const asyncHandler = require("express-async-handler");
 
-const checkUser = asyncHandler(async (req, res, next) => {
+const checkAuth = asyncHandler(async (req, res, next) => {
   const authHeader = req.headers["authorization"];
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -17,7 +17,7 @@ const checkUser = asyncHandler(async (req, res, next) => {
     // console.log("decoded user =>", decoded);
 
     // Check if the user exists
-    const currUser = await UserModel.findById(decoded.id);
+    const currUser = await User.findById(decoded.id);
     // console.log(currUser);
     if (!currUser) {
       return res.status(401).json({ message: "Unauthorized: User not found" });
@@ -33,4 +33,4 @@ const checkUser = asyncHandler(async (req, res, next) => {
   }
 });
 
-module.exports = { checkUser };
+module.exports = { checkAuth };

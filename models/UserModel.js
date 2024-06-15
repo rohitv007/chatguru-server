@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 const { isEmail, isStrongPassword, isLength } = require("validator");
+const Schema = mongoose.Schema
 
-const userSchema = new mongoose.Schema(
+const userSchema = new Schema(
   {
     username: {
       type: String,
@@ -20,11 +21,22 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please provide a password"],
     },
+    pic: {
+      type: String,
+      required: true,
+      default:
+        "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+    },
+    isAdmin: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-const UserModel = mongoose.model("User", userSchema);
-module.exports = UserModel;
+const User = mongoose.model("User", userSchema);
+module.exports = User;

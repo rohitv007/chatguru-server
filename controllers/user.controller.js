@@ -1,7 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const createToken = require("../helpers/createToken");
-const UserModel = require("../models/user.model");
+const User = require("../models/UserModel");
 
 const MAX_AGE = 24 * 60 * 60; // 24 hours
 
@@ -16,7 +16,7 @@ const registerUser = asyncHandler(async (req, res) => {
         .json({ message: "Please provide all credentials" });
     }
 
-    const existingUser = await UserModel.findOne({
+    const existingUser = await User.findOne({
       $or: [{ username }, { email }],
     });
 
@@ -30,7 +30,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(regPassword, 10);
 
-    await UserModel.create({
+    await User.create({
       username,
       email,
       password: hashedPassword,
@@ -66,7 +66,7 @@ const loginUser = asyncHandler(async (req, res) => {
     });
   }
 
-  const existingUser = await UserModel.findOne({
+  const existingUser = await User.findOne({
     $or: [{ username: userPayload }, { email: userPayload }],
   });
 
@@ -89,23 +89,26 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     // create jwt token for login
-    const accessToken = await createToken(
+    const accessToken = createToken(
       existingUser?._id,
       existingUser?.username,
       existingUser?.user_type_id,
       MAX_AGE
     );
 
+    // console.log(accessToken);
+
     res.cookie("tokenCookie", accessToken, {
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
+      sameSite: "strict",
       maxAge: MAX_AGE * 1000, // unit - milliseconds
     });
 
     res.status(200).json({
       success: true,
       message: "Logged In Successfully!",
+      id: existingUser._id,
       accessToken,
     });
   } catch (error) {
@@ -126,4 +129,21 @@ const logoutUser = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { registerUser, loginUser, logoutUser };
+// ALL USERS - GET method
+const allUsers = asyncHandler(async (req, res) => {
+  try {
+    // console.log('USER ->', req?.user);
+
+    const allUsers = await User.find({
+      _id: { $ne: req.user?._id },
+    }).select("-password");
+
+    // console.log(allUsers);
+    res.status(200).json(allUsers);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ success: true, message: "Internal Server Error" });
+  }
+});
+
+module.exports = { registerUser, loginUser, logoutUser, allUsers };
