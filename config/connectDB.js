@@ -1,24 +1,24 @@
 const mongoose = require("mongoose");
 const asyncHandler = require("express-async-handler");
+const { DB_NAME } = require("../constants");
 
 const connectDB = asyncHandler(async () => {
-  const uri = process.env.DATABASE_URI;
+  const connectionString = `${process.env.MONGODB_URI}/${DB_NAME}`;
   const maxRetries = 3;
   let retries = 0;
 
   while (retries < maxRetries) {
     try {
-      const conn = await mongoose.connect(uri);
+      const connectionInstance = await mongoose.connect(connectionString);
       console.log(
-        `Database connected: ${conn.connection.host}, ${conn.connection.name}`
+        `DB Connected : ${connectionInstance.connection.host}, ${connectionInstance.connection.name}`
       );
-      return conn;
+      return connectionInstance;
     } catch (error) {
       // gracefully handling error in db connection
       // let's say that max number of retries avbl to connect to db is 3
       // we can keep on trying to connect in the catch block for upto 3 trials
       // else we will exit the process
-
       console.error(
         `Attempt ${retries + 1} - Error connecting to database:`,
         error

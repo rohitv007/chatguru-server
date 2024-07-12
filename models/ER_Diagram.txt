@@ -1,0 +1,36 @@
+users [icon: user, color: blue]{
+  _id string pk
+  username string
+  email string
+  password string
+  pic string
+  isAdmin boolean
+  createdAt DateTime
+  updatedAt DateTime
+}
+
+chats [icon: list, color: yellow]{
+  _id string pk
+  chatName string
+  users ObjectId[] users
+  latestMessage ObjectId messages
+  isGroup boolean
+  groupAdmin ObjectId users
+  createdAt DateTime
+  updatedAt DateTime
+}
+
+messages [icon: message-circle, color: green]{
+  _id string pk
+  sender ObjectId users
+  chat ObjectId chats
+  createdAt DateTime
+  updatedAt DateTime
+}
+
+messages.sender - users._id
+messages.chat - chats._id
+
+chats.users < users._id
+chats.latestMessage - messages._id
+chats.groupAdmin - users._id

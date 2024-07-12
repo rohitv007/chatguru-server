@@ -1,10 +1,10 @@
 const asyncHandler = require("express-async-handler");
-const Message = require("../models/MessageModel");
-const User = require("../models/UserModel");
-const Chat = require("../models/ChatModel");
+const Message = require("../models/messages.model");
+const User = require("../models/users.model");
+const Chat = require("../models/chats.model");
 
 //@description     Fetch all messages of inside a chat
-//@route           GET /api/message/:chatId
+//@route           GET /api/v1/message/:chatId
 //@access          Protected
 const fetchMessages = asyncHandler(async (req, res) => {
   const { chatId } = req.params;
@@ -24,13 +24,13 @@ const fetchMessages = asyncHandler(async (req, res) => {
 });
 
 //@description     Send New Message
-//@route           POST /api/message
+//@route           POST /api/v1/message
 //@access          Protected
 const sendMessage = asyncHandler(async (req, res) => {
   console.log("sending new message");
-  const { chatId, text } = req.body;
+  const { chatId, content } = req.body;
 
-  if (!chatId || !text) {
+  if (!chatId || !content) {
     console.log("Invalid data passed into request");
     return res.sendStatus(400);
   }
@@ -38,7 +38,7 @@ const sendMessage = asyncHandler(async (req, res) => {
   try {
     let messageDoc = await Message.create({
       sender: req.user._id,
-      text,
+      content,
       chat: chatId,
     });
 

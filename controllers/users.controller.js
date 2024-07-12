@@ -1,16 +1,32 @@
 const asyncHandler = require("express-async-handler");
-const bcrypt = require("bcrypt");
-const createToken = require("../helpers/createToken");
-const User = require("../models/UserModel");
+const User = require("../models/users.model");
 
 const MAX_AGE = 24 * 60 * 60; // 24 hours
+
+const generateAccessAndRefreshTokens = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+    // saves the updated user document and bypasses any schema validations before saving
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+};
 
 // REGISTER USER - POST method
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, regPassword, user_type_id } = req.body;
 
   try {
-    if (!username || !email || !regPassword) {
+    // if any element is blank, return error
+    if ([username, email, regPassword].some((field) => field?.trim() === "")) {
       return res
         .status(400)
         .json({ message: "Please provide all credentials" });
@@ -28,26 +44,29 @@ const registerUser = asyncHandler(async (req, res) => {
         .json({ message: "User already exists! Please use a new email" });
     }
 
-    const hashedPassword = await bcrypt.hash(regPassword, 10);
-
-    await User.create({
+    const user = await User.create({
       username,
       email,
-      password: hashedPassword,
+      password: regPassword,
       user_type_id,
     });
 
-    // const accessToken = createToken(
-    //   newUser?._id,
-    //   newUser?.username,
-    //   newUser?.user_type_id || 0,
-    //   MAX_AGE
-    // );
+    const newUser = await User.findById(user._id).select(
+      "-password -refreshToken"
+    );
+
+    if (!newUser) {
+      return res
+        .status(500)
+        .json({ message: "Something went wrong while registering the user!" });
+    }
+
+    // console.log("register success");
 
     res.status(201).json({
       success: true,
-      message: "Account created successfully!",
-      // accessToken,
+      message: "Account Created Successfully!",
+      user: newUser,
     });
   } catch (error) {
     console.log("Error from server -", error);
@@ -80,37 +99,48 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   try {
-    const auth = await bcrypt.compare(loginPassword, existingUser.password);
-    if (!auth) {
+    const isPasswordValid = await existingUser.isPasswordMatch(loginPassword);
+    if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
         message: "Password mismatch! Please provide a correct password.",
       });
     }
-
-    // create jwt token for login
-    const accessToken = createToken(
-      existingUser?._id,
-      existingUser?.username,
-      existingUser?.user_type_id,
-      MAX_AGE
+    // generate tokens for login route
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+      existingUser._id
     );
 
-    // console.log(accessToken);
+    const loggedUser = await User.findById(existingUser._id).select(
+      "-password -refreshToken"
+    );
 
-    res.cookie("tokenCookie", accessToken, {
+    if(!loggedUser) {
+      return res
+        .status(500)
+        .json({ message: "Something went wrong while trying to login!" });
+    }
+
+    const options = {
       httpOnly: true,
       secure: true,
       sameSite: "strict",
       maxAge: MAX_AGE * 1000, // unit - milliseconds
-    });
+    };
 
-    res.status(200).json({
-      success: true,
-      message: "Logged In Successfully!",
-      id: existingUser._id,
-      accessToken,
-    });
+    // console.log("login success");
+
+    res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json({
+        success: true,
+        message: "Logged In Successfully!",
+        user: loggedUser,
+        accessToken,
+        refreshToken,
+      });
   } catch (error) {
     res.status(400).json(error.message);
   }
@@ -118,10 +148,31 @@ const loginUser = asyncHandler(async (req, res) => {
 
 // LOGOUT USER - GET method
 const logoutUser = asyncHandler(async (req, res) => {
+  const options = {
+    httpOnly: true,
+    secure: true,
+    sameSite: "strict",
+    maxAge: MAX_AGE * 1000, // unit - milliseconds
+  };
+
+  // console.log("USER =>", req?.user);
+
   try {
-    res.clearCookie("tokenCookie");
+    // Remove the refreshToken field from the user's document
+    await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $unset: { refreshToken: 1 },
+      },
+      {
+        new: true,
+      }
+    );
+
     res
       .status(200)
+      .clearCookie("accessToken", options)
+      .clearCookie("refreshToken", options)
       .json({ success: true, message: "Logged Out Successfully!" });
   } catch (error) {
     console.error("Error during logout:", error);
@@ -136,7 +187,7 @@ const allUsers = asyncHandler(async (req, res) => {
 
     const allUsers = await User.find({
       _id: { $ne: req.user?._id },
-    }).select("-password");
+    }).select("-password -refreshToken");
 
     // console.log(allUsers);
     res.status(200).json(allUsers);

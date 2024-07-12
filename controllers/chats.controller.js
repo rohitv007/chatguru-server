@@ -1,9 +1,9 @@
 const asyncHandler = require("express-async-handler");
-const Chat = require("../models/ChatModel");
-const User = require("../models/UserModel");
+const Chat = require("../models/chats.model");
+const User = require("../models/users.model");
 
 //@description     Create a new chat/access existing chat
-//@route           POST /api/chat/
+//@route           POST /api/v1/chat
 //@access          Protected
 const accessChat = asyncHandler(async (req, res) => {
   // console.log(req.body);
@@ -23,14 +23,16 @@ const accessChat = asyncHandler(async (req, res) => {
       $all: [userId, req.user._id],
     },
   })
-    .populate("users", "-password") // populating Chat given values inside 'users' array with the ref from UserModel
-    .populate("latestMessage"); // populating Chat with the latestMessage with ref from MessageModel
+    .populate("users", "-password") // populating Chat with given values inside 'users' array, where ref is UserModel
+    .populate("latestMessage"); // populating Chat with latestMessage, where ref is MessageModel
 
   // populating latestMessage object with sender details (under 'select')
   currChat = await User.populate(currChat, {
     path: "latestMessage.sender",
     select: "username email pic",
   });
+
+  // console.log('EXISTING CHAT =>\n', currChat[0]);
 
   if (currChat.length > 0) return res.status(200).json(currChat[0]);
 
@@ -55,7 +57,7 @@ const accessChat = asyncHandler(async (req, res) => {
 });
 
 //@description     Fetch all chats for a user
-//@route           GET /api/chat/
+//@route           GET /api//v1/chat
 //@access          Protected
 const fetchChats = asyncHandler(async (req, res) => {
   try {
