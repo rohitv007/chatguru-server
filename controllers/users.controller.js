@@ -1,17 +1,20 @@
 const asyncHandler = require("express-async-handler");
+const jwt = require("jsonwebtoken");
 const User = require("../models/users.model");
+const { cookieOptions } = require("../utils/CookieOptions");
 
-const MAX_AGE = 24 * 60 * 60; // 24 hours
-
+//! GENERATE AUTH TOKENS FOR USER
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
 
+    // store refreshToken in db as well
     user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
+
     // saves the updated user document and bypasses any schema validations before saving
+    await user.save({ validateBeforeSave: false });
 
     return { accessToken, refreshToken };
   } catch (error) {
@@ -20,7 +23,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
   }
 };
 
-// REGISTER USER - POST method
+//! REGISTER USER - POST method
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, regPassword, user_type_id } = req.body;
 
@@ -74,7 +77,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-// LOGIN USER - POST method
+//! LOGIN USER - POST method
 const loginUser = asyncHandler(async (req, res) => {
   const { userPayload, loginPassword } = req.body;
 
@@ -89,12 +92,12 @@ const loginUser = asyncHandler(async (req, res) => {
     $or: [{ username: userPayload }, { email: userPayload }],
   });
 
-  // console.log("checking existingUser in login ->", existingUser);
+  // console.log("checking user in login ->", existingUser);
 
   if (!existingUser) {
     return res.status(404).json({
       success: false,
-      message: `User does not exist! Please create an account.`,
+      message: "User does not exist! Please create an account.",
     });
   }
 
@@ -103,7 +106,7 @@ const loginUser = asyncHandler(async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: "Password mismatch! Please provide a correct password.",
+        message: "Invalid user credentials",
       });
     }
     // generate tokens for login route
@@ -111,33 +114,27 @@ const loginUser = asyncHandler(async (req, res) => {
       existingUser._id
     );
 
-    const loggedUser = await User.findById(existingUser._id).select(
+    const loggedInUser = await User.findById(existingUser._id).select(
       "-password -refreshToken"
     );
 
-    if(!loggedUser) {
-      return res
-        .status(500)
-        .json({ message: "Something went wrong while trying to login!" });
+    if (!loggedInUser) {
+      return res.status(500).json({
+        success: false,
+        message: "Something went wrong while trying to login!",
+      });
     }
-
-    const options = {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      maxAge: MAX_AGE * 1000, // unit - milliseconds
-    };
 
     // console.log("login success");
 
     res
       .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, options)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", refreshToken, cookieOptions)
       .json({
         success: true,
         message: "Logged In Successfully!",
-        user: loggedUser,
+        user: loggedInUser,
         accessToken,
         refreshToken,
       });
@@ -146,15 +143,8 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-// LOGOUT USER - GET method
+//! LOGOUT USER - GET method
 const logoutUser = asyncHandler(async (req, res) => {
-  const options = {
-    httpOnly: true,
-    secure: true,
-    sameSite: "strict",
-    maxAge: MAX_AGE * 1000, // unit - milliseconds
-  };
-
   // console.log("USER =>", req?.user);
 
   try {
@@ -171,12 +161,68 @@ const logoutUser = asyncHandler(async (req, res) => {
 
     res
       .status(200)
-      .clearCookie("accessToken", options)
-      .clearCookie("refreshToken", options)
+      .clearCookie("accessToken", cookieOptions)
+      .clearCookie("refreshToken", cookieOptions)
       .json({ success: true, message: "Logged Out Successfully!" });
   } catch (error) {
     console.error("Error during logout:", error);
     res.status(500).json({ success: true, message: "Internal Server Error" });
+  }
+});
+
+//! RENEW ACCESS TOKEN - POST method
+const renewAccessToken = asyncHandler(async (req, res) => {
+  // console.log(req.cookies);
+  // console.log(req.body);
+  const existingRefreshToken =
+    req.cookies.refreshToken || req.body.refreshToken;
+
+  if (!existingRefreshToken) {
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized Request",
+    });
+  }
+
+  try {
+    const decodedToken = jwt.verify(
+      existingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+    const user = await User.findById(decodedToken?._id);
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid Refresh Token",
+      });
+    }
+
+    if (existingRefreshToken !== user?.refreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: "Refresh Token is expired or used!",
+      });
+    }
+
+    const { accessToken, newRefreshToken } =
+      await generateAccessAndRefreshTokens(user._id);
+
+    res
+      .status(200)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", newRefreshToken, cookieOptions)
+      .json({
+        success: true,
+        message: "Access Token renewed",
+        accessToken,
+        refreshToken: newRefreshToken,
+      });
+  } catch (error) {
+    res.status(401).send({
+      success: false,
+      message: error?.message || "Invalid refresh token",
+    });
   }
 });
 
@@ -197,4 +243,10 @@ const allUsers = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { registerUser, loginUser, logoutUser, allUsers };
+module.exports = {
+  registerUser,
+  loginUser,
+  logoutUser,
+  renewAccessToken,
+  allUsers,
+};
