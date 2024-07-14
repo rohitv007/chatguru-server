@@ -1,10 +1,14 @@
 const { Router } = require("express");
-const { fetchMessages, sendMessage } = require("../controllers/messages.controller");
-const { checkAuth } = require("../middlewares/auth.middleware");
+const {
+  fetchMessages,
+  sendMessage,
+} = require("../controllers/messages.controller");
+const { verifyJWT } = require("../middlewares/auth.middleware");
 
 const router = Router();
 
-router.route("/:chatId").get(checkAuth, fetchMessages);
-router.route("/").post(checkAuth, sendMessage);
+router.use(verifyJWT);
+router.route("/:chatId").get(fetchMessages);
+router.route("/").post(sendMessage);
 
-module.exports = router
+module.exports = router;

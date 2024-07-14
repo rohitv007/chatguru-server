@@ -5,7 +5,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const asyncHandler = require("express-async-handler");
 const connectDB = require("./config/connectDB");
-const { checkAuth } = require("./middlewares/auth.middleware");
+const { verifyJWT } = require("./middlewares/auth.middleware");
 const corsOptions = require("./config/corsOptions");
 const mongoose = require("mongoose");
 const PORT = process.env.PORT || 3000;
@@ -34,10 +34,10 @@ app.use("/api/v1/message", messageRoutes);
 
 app.get(
   "/api/v1/profile",
-  checkAuth,
+  verifyJWT,
   asyncHandler(async (req, res) => {
     // console.log("PROFILE ACCESS ✅");
-    const accessToken = req.headers["authorization"].split(" ")[1];
+    const accessToken = req?.headers["authorization"].split(" ")[1];
     // console.log(accessToken);
     const { _id, username, email } = await req.user;
 

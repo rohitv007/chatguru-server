@@ -6,14 +6,14 @@ const {
   allUsers,
   renewAccessToken,
 } = require("../controllers/users.controller");
-const { checkAuth } = require("../middlewares/auth.middleware");
+const { verifyJWT } = require("../middlewares/auth.middleware");
 
 const router = Router();
 
 router.route("/register").post(registerUser);
 router.route("/login").post(loginUser);
 router.route("/renew-token").post(renewAccessToken);
-router.route("/logout").get(checkAuth, logoutUser);
-router.route("/all").get(checkAuth, allUsers);
+router.route("/logout").get(verifyJWT, logoutUser);
+router.route("/all").get(verifyJWT, allUsers);
 
 module.exports = router;

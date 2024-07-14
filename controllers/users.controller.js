@@ -1,7 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
 const User = require("../models/users.model");
-const { cookieOptions } = require("../utils/CookieOptions");
+const { accessCookieOptions, refreshCookieOptions } = require("../utils/CookieOptions");
 
 //! GENERATE AUTH TOKENS FOR USER
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -129,14 +129,13 @@ const loginUser = asyncHandler(async (req, res) => {
 
     res
       .status(200)
-      .cookie("accessToken", accessToken, cookieOptions)
-      .cookie("refreshToken", refreshToken, cookieOptions)
+      .cookie("accessToken", accessToken, accessCookieOptions)
+      .cookie("refreshToken", refreshToken, refreshCookieOptions)
       .json({
         success: true,
         message: "Logged In Successfully!",
         user: loggedInUser,
         accessToken,
-        refreshToken,
       });
   } catch (error) {
     res.status(400).json(error.message);
@@ -161,8 +160,8 @@ const logoutUser = asyncHandler(async (req, res) => {
 
     res
       .status(200)
-      .clearCookie("accessToken", cookieOptions)
-      .clearCookie("refreshToken", cookieOptions)
+      .clearCookie("accessToken", accessCookieOptions)
+      .clearCookie("refreshToken", refreshCookieOptions)
       .json({ success: true, message: "Logged Out Successfully!" });
   } catch (error) {
     console.error("Error during logout:", error);
@@ -210,8 +209,8 @@ const renewAccessToken = asyncHandler(async (req, res) => {
 
     res
       .status(200)
-      .cookie("accessToken", accessToken, cookieOptions)
-      .cookie("refreshToken", newRefreshToken, cookieOptions)
+      .cookie("accessToken", accessToken, accessCookieOptions)
+      .cookie("refreshToken", newRefreshToken, refreshCookieOptions)
       .json({
         success: true,
         message: "Access Token renewed",

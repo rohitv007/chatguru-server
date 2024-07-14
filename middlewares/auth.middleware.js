@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/users.model");
 const asyncHandler = require("express-async-handler");
 
-const checkAuth = asyncHandler(async (req, res, next) => {
+const verifyJWT = asyncHandler(async (req, res, next) => {
   const authHeader = req.headers["authorization"];
   // console.log('HEADER =>', authHeader);
 
@@ -19,7 +19,7 @@ const checkAuth = asyncHandler(async (req, res, next) => {
     // console.log('TOKEN =>', token);
 
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    // console.log("decoded user =>", decoded);
+    // console.log("decoded user =>", decodedToken);
 
     // Check if the user exists
     const currentUser = await User.findById(decodedToken._id).select(
@@ -43,4 +43,4 @@ const checkAuth = asyncHandler(async (req, res, next) => {
   }
 });
 
-module.exports = { checkAuth };
+module.exports = { verifyJWT };
