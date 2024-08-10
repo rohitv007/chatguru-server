@@ -23,7 +23,9 @@ const generateAccessAndRefreshTokens = async (userId) => {
   }
 };
 
-//! REGISTER USER - POST method
+//! @description     Register New User
+//! @route           POST /api/v1/user/register
+//! @access          Public
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, regPassword, user_type_id } = req.body;
 
@@ -77,7 +79,9 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-//! LOGIN USER - POST method
+//! @description     Login User
+//! @route           POST /api/v1/user/login
+//! @access          Public
 const loginUser = asyncHandler(async (req, res) => {
   const { userPayload, loginPassword } = req.body;
 
@@ -142,7 +146,9 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-//! LOGOUT USER - GET method
+//! @description     Logout User
+//! @route           GET /api/v1/user/logout
+//! @access          Protected
 const logoutUser = asyncHandler(async (req, res) => {
   // console.log("USER =>", req?.user);
 
@@ -169,7 +175,9 @@ const logoutUser = asyncHandler(async (req, res) => {
   }
 });
 
-//! RENEW ACCESS TOKEN - POST method
+//! @description     Renew Access Token
+//! @route           POST /api/v1/user/renew-token
+//! @access          Public/Protected
 const renewAccessToken = asyncHandler(async (req, res) => {
   // console.log(req.cookies);
   // console.log(req.body);
@@ -225,7 +233,9 @@ const renewAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-// ALL USERS - GET method
+//! @description     List of all Users
+//! @route           GET /api/v1/user/all
+//! @access          Protected
 const allUsers = asyncHandler(async (req, res) => {
   try {
     // console.log('USER ->', req?.user);

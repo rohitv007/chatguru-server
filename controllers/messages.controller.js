@@ -3,9 +3,9 @@ const Message = require("../models/messages.model");
 const User = require("../models/users.model");
 const Chat = require("../models/chats.model");
 
-//@description     Fetch all messages of inside a chat
-//@route           GET /api/v1/message/:chatId
-//@access          Protected
+//! @description     Fetch all messages of inside a chat
+//! @route           GET /api/v1/message/:chatId
+//! @access          Protected
 const fetchMessages = asyncHandler(async (req, res) => {
   const { chatId } = req.params;
   // console.log(chatId);
@@ -23,12 +23,12 @@ const fetchMessages = asyncHandler(async (req, res) => {
   }
 });
 
-//@description     Send New Message
-//@route           POST /api/v1/message
-//@access          Protected
+//! @description     Send New Message
+//! @route           POST /api/v1/message
+//! @access          Protected
 const sendMessage = asyncHandler(async (req, res) => {
-  console.log("sending new message");
-  const { chatId, content } = req.body;
+  console.log("sending new message", req.body);
+  const { chatId, content, file } = req.body;
 
   if (!chatId || !content) {
     console.log("Invalid data passed into request");

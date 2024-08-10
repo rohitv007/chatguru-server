@@ -8,6 +8,8 @@ const connectDB = require("./config/connectDB");
 const { verifyJWT } = require("./middlewares/auth.middleware");
 const corsOptions = require("./config/corsOptions");
 const mongoose = require("mongoose");
+const { createServer } = require("http");
+const configureSocket = require("./socket");
 const PORT = process.env.PORT || 3000;
 
 // Connect to MongoDB Database
@@ -36,9 +38,8 @@ app.get(
   "/api/v1/profile",
   verifyJWT,
   asyncHandler(async (req, res) => {
-    // console.log("PROFILE ACCESS ✅");
     const accessToken = req?.headers["authorization"].split(" ")[1];
-    // console.log(accessToken);
+    // console.log("PROFILE ACCESS\n", accessToken);
     const { _id, username, email } = await req.user;
 
     return res.json({
@@ -55,6 +56,9 @@ app.all("*", (req, res) =>
   res.status(404).send("Error 404! Please go to the correct page")
 );
 
+const server = createServer(app);
+configureSocket(server);
+
 mongoose.connection.once("open", () => {
-  app.listen(PORT, () => console.log(`Chat app listening on port ${PORT}`));
+  server.listen(PORT, () => console.log(`Chat app listening on port ${PORT}`));
 });
