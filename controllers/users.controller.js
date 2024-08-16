@@ -1,7 +1,11 @@
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
 const User = require("../models/users.model");
-const { accessCookieOptions, refreshCookieOptions } = require("../utils/CookieOptions");
+const {
+  accessCookieOptions,
+  refreshCookieOptions,
+} = require("../utils/CookieOptions");
+const { getIO } = require("../socket");
 
 //! GENERATE AUTH TOKENS FOR USER
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -67,6 +71,8 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     // console.log("register success");
+
+    getIO().emit("userAdded", newUser);
 
     res.status(201).json({
       success: true,

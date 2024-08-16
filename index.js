@@ -9,7 +9,7 @@ const { verifyJWT } = require("./middlewares/auth.middleware");
 const corsOptions = require("./config/corsOptions");
 const mongoose = require("mongoose");
 const { createServer } = require("http");
-const configureSocket = require("./socket");
+const { configureSocket } = require("./socket");
 const PORT = process.env.PORT || 3000;
 
 // Connect to MongoDB Database
@@ -40,14 +40,12 @@ app.get(
   asyncHandler(async (req, res) => {
     const accessToken = req?.headers["authorization"].split(" ")[1];
     // console.log("PROFILE ACCESS\n", accessToken);
-    const { _id, username, email } = await req.user;
+    const user = await req.user;
 
     return res.json({
       success: true,
+      user,
       accessToken,
-      id: _id,
-      username,
-      email,
     });
   })
 );

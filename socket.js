@@ -1,25 +1,29 @@
 const { Server } = require("socket.io");
 const corsOptions = require("./config/corsOptions");
+const { fetchChats } = require("./controllers/chats.controller");
 
 //  SOCKET code
+let io;
+
 const configureSocket = (server) => {
-  const io = new Server(server, {
+  io = new Server(server, {
     cors: corsOptions,
-    pingTimeout: 60 * 1000      // 60 seconds
+    pingTimeout: 60 * 1000, // 60 seconds
   });
 
   io.on("connection", (socket) => {
     console.log("User Connected");
-    console.log("ID =>", socket.id);
+    console.log("Socket ID =>", socket.id);
 
     socket.on("sendMessage", (message) => {
-      console.log('New Message =>', message);
+      console.log("New Message =>", message.content);
       io.emit("newMessage", message);
     });
 
-    socket.on("accessUserChat", (data) => {
-      console.log("HERE =>", data);
-      io.emit('allChats', )
+    socket.on("join chat", (room) => {
+      socket.join(room);
+      console.log("User Joined Room:", room);
+      io.emit("chat accessed", room);
     });
 
     socket.on("disconnect", () => {
@@ -28,4 +32,11 @@ const configureSocket = (server) => {
   });
 };
 
-module.exports = configureSocket;
+const getIO = () => {
+  if (!io) {
+    throw new Error("Socket.io is not initialized");
+  }
+  return io;
+};
+
+module.exports = { configureSocket, getIO };

@@ -57,7 +57,7 @@ const accessChat = asyncHandler(async (req, res) => {
 });
 
 //@description     Fetch all chats for a user
-//@route           GET /api//v1/chat
+//@route           GET /api/v1/chat
 //@access          Protected
 const fetchChats = asyncHandler(async (req, res) => {
   try {
