@@ -7,20 +7,22 @@ accessExpiry = Number.parseInt(accessExpiry) * 60;
 
 if (environment === "development") {
   refreshExpiry = Number.parseInt(refreshExpiry) * 60; // 30 minutes
-  // console.log(environment, accessExpiry, refreshExpiry);
 } else if (environment === "production") {
   refreshExpiry = Number.parseInt(refreshExpiry) * 24 * 60 * 60; // 15 days
 }
+// console.log(environment, accessExpiry, refreshExpiry);
 
 const accessCookieOptions = {
   httpOnly: true,
   secure: true,
+  sameSite: "None",
   maxAge: accessExpiry * 1000, // milliseconds
 };
 
 const refreshCookieOptions = {
   httpOnly: true,
   secure: true,
+  sameSite: "None",
   maxAge: refreshExpiry * 1000, // milliseconds
 };
 
