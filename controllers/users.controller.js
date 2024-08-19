@@ -31,11 +31,11 @@ const generateAccessAndRefreshTokens = async (userId) => {
 //! @route           POST /api/v1/user/register
 //! @access          Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { username, email, regPassword, user_type_id } = req.body;
+  const { username, email, password } = req.body;
 
   try {
     // if any element is blank, return error
-    if ([username, email, regPassword].some((field) => field?.trim() === "")) {
+    if ([username, email, password].some((field) => field?.trim() === "")) {
       return res
         .status(400)
         .json({ message: "Please provide all credentials" });
@@ -56,8 +56,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const user = await User.create({
       username,
       email,
-      password: regPassword,
-      user_type_id,
+      password: password,
     });
 
     const newUser = await User.findById(user._id).select(
@@ -89,9 +88,9 @@ const registerUser = asyncHandler(async (req, res) => {
 //! @route           POST /api/v1/user/login
 //! @access          Public
 const loginUser = asyncHandler(async (req, res) => {
-  const { userPayload, loginPassword } = req.body;
+  const { userInput, password } = req.body;
 
-  if (!userPayload || !loginPassword) {
+  if (!userInput || !password) {
     return res.status(400).json({
       success: false,
       message: "Please provide all credentials",
@@ -99,7 +98,7 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   const existingUser = await User.findOne({
-    $or: [{ username: userPayload }, { email: userPayload }],
+    $or: [{ username: userInput }, { email: userInput }],
   });
 
   // console.log("checking user in login ->", existingUser);
@@ -112,7 +111,7 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   try {
-    const isPasswordValid = await existingUser.isPasswordMatch(loginPassword);
+    const isPasswordValid = await existingUser.isPasswordMatch(password);
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,

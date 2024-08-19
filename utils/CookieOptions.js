@@ -2,27 +2,30 @@ const environment = process.env.NODE_ENV;
 let accessExpiry = process.env.ACCESS_TOKEN_EXPIRY;
 let refreshExpiry = process.env.REFRESH_TOKEN_EXPIRY;
 
-// dev - 5 minutes | prod - 15 minutes
+const isProduction = environment === "production";
+
+// Convert expiry to seconds (assuming env variables are in minutes)
 accessExpiry = Number.parseInt(accessExpiry) * 60;
 
-if (environment === "development") {
+if (!isProduction) {
+  // non-prod environment
   refreshExpiry = Number.parseInt(refreshExpiry) * 60; // 30 minutes
-} else if (environment === "production") {
+} else {
+  // prod environment
   refreshExpiry = Number.parseInt(refreshExpiry) * 24 * 60 * 60; // 15 days
 }
-// console.log(environment, accessExpiry, refreshExpiry);
 
 const accessCookieOptions = {
   httpOnly: true,
-  secure: true,
-  sameSite: "None",
+  secure: isProduction, // Only true in prod
+  sameSite: isProduction ? "None" : "Lax", // Lax for non-prod, None for prod
   maxAge: accessExpiry * 1000, // milliseconds
 };
 
 const refreshCookieOptions = {
   httpOnly: true,
-  secure: true,
-  sameSite: "None",
+  secure: isProduction, // Only true in prod
+  sameSite: isProduction ? "None" : "Lax", // Lax for non-prod, None for prod
   maxAge: refreshExpiry * 1000, // milliseconds
 };
 
