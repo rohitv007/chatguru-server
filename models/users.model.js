@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { isEmail } = require("validator");
+// const { isStrongPassword } = require("validator");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Schema = mongoose.Schema;
@@ -20,11 +21,12 @@ const userSchema = new Schema(
       unique: [true, "Email address already taken! Please provide a new email"],
       lowercase: true,
       trim: true,
-      validate: [isEmail, "Please enter valid email"],
+      validate: [isEmail, "Please provide a valid email"],
     },
     password: {
       type: String,
       required: [true, "Please provide a password"],
+      // validate: [isStrongPassword, "Please enter a strong password"],
     },
     pic: {
       type: String,

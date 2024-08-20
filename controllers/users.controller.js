@@ -6,6 +6,7 @@ const {
   refreshCookieOptions,
 } = require("../utils/CookieOptions");
 const { getIO } = require("../socket");
+const { formatValidationErrors } = require("../helpers/formatValidationErrors");
 
 //! GENERATE AUTH TOKENS FOR USER
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -38,7 +39,7 @@ const registerUser = asyncHandler(async (req, res) => {
     if ([username, email, password].some((field) => field?.trim() === "")) {
       return res
         .status(400)
-        .json({ message: "Please provide all credentials" });
+        .json({ message: "Please provide all required credentials" });
     }
 
     const existingUser = await User.findOne({
@@ -48,15 +49,16 @@ const registerUser = asyncHandler(async (req, res) => {
     // console.log("checking existingUser in register ->", existingUser);
 
     if (existingUser) {
-      return res
-        .status(400)
-        .json({ message: "User already exists! Please use a new email" });
+      return res.status(400).json({
+        message:
+          "User already exists! Please use a different username or email",
+      });
     }
 
     const user = await User.create({
       username,
       email,
-      password: password,
+      password,
     });
 
     const newUser = await User.findById(user._id).select(
@@ -75,12 +77,19 @@ const registerUser = asyncHandler(async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Account Created Successfully!",
+      message:
+        "Account created successfully!\nPlease login to experience ChatGuru",
       user: newUser,
     });
   } catch (error) {
-    console.log("Error from server -", error);
-    res.status(400).json(error);
+    // console.log(error);
+    if (error.name === "ValidationError") {
+      const formattedErrors = formatValidationErrors(error.errors);
+      // console.log(formattedErrors);
+      res.status(400).json({ success: false, errors: formattedErrors });
+    } else {
+      res.status(500).json({ success: false, message: "Server error" });
+    }
   }
 });
 
@@ -93,7 +102,7 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!userInput || !password) {
     return res.status(400).json({
       success: false,
-      message: "Please provide all credentials",
+      message: "Please provide all required credentials",
     });
   }
 
@@ -106,7 +115,7 @@ const loginUser = asyncHandler(async (req, res) => {
   if (!existingUser) {
     return res.status(404).json({
       success: false,
-      message: "User does not exist! Please create an account.",
+      message: "User not found! Please create an account to continue.",
     });
   }
 
@@ -115,7 +124,8 @@ const loginUser = asyncHandler(async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: "Invalid user credentials",
+        message:
+          "Invalid credentials! Please check your username/email and password.",
       });
     }
     // generate tokens for login route
