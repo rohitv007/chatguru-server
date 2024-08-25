@@ -4,7 +4,7 @@ let refreshExpiry = process.env.REFRESH_TOKEN_EXPIRY;
 
 const isProduction = environment === "production";
 
-// Convert expiry to seconds (assuming env variables are in minutes)
+// Convert expiry to seconds
 accessExpiry = Number.parseInt(accessExpiry) * 60;
 
 if (!isProduction) {

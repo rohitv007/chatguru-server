@@ -16,7 +16,7 @@ const connectDB = asyncHandler(async () => {
       return connectionInstance;
     } catch (error) {
       // gracefully handling error in db connection
-      // let's say that max number of retries avbl to connect to db is 3
+      // let's say that max number of retries available to connect to db is 3
       // we can keep on trying to connect in the catch block for upto 3 trials
       // else we will exit the process
       console.error(

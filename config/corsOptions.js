@@ -1,8 +1,8 @@
-const allowedOrigins = require("./allowedOrigins");
+const allowedOrigins = [process.env.APP_CLIENT_URL];
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));

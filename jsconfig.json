@@ -1,4 +1,3 @@
-// Disable TypeScript checking for folders/files (eg - node_modules)
 {
   "compilerOptions": {
     "checkJs": false
