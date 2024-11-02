@@ -4,7 +4,7 @@ const User = require("../models/users.model");
 const Chat = require("../models/chats.model");
 
 //! @description     Fetch all messages of inside a chat
-//! @route           GET /api/v1/message/:chatId
+//! @route           GET /api/v1/messages/:chatId
 //! @access          Protected
 const fetchMessages = asyncHandler(async (req, res) => {
   const { chatId } = req.params;
@@ -12,7 +12,7 @@ const fetchMessages = asyncHandler(async (req, res) => {
 
   try {
     const messageData = await Message.find({ chat: chatId })
-      .populate("sender", "username email pic")
+      .populate("sender", "username email avatarImage")
       .populate("chat");
     // console.log("EXISTING\n", messageData);
 
@@ -24,7 +24,7 @@ const fetchMessages = asyncHandler(async (req, res) => {
 });
 
 //! @description     Send New Message
-//! @route           POST /api/v1/message
+//! @route           POST /api/v1/messages
 //! @access          Protected
 const sendMessage = asyncHandler(async (req, res) => {
   console.log("sending new message", req.body);
@@ -42,13 +42,13 @@ const sendMessage = asyncHandler(async (req, res) => {
       chat: chatId,
     });
 
-    messageDoc = (await messageDoc.populate("sender", "username pic")).populate(
-      "chat"
-    );
+    messageDoc = (
+      await messageDoc.populate("sender", "username avatarImage")
+    ).populate("chat");
 
     messageDoc = await User.populate(messageDoc, {
       path: "chat.users",
-      select: "username email pic",
+      select: "username email avatarImage",
     });
 
     await Chat.findByIdAndUpdate(chatId, {

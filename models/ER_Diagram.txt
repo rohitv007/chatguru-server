@@ -3,7 +3,7 @@ users [icon: user, color: blue]{
   username string
   email string
   password string
-  pic string
+  avatarImage string
   isAdmin boolean
   createdAt DateTime
   updatedAt DateTime

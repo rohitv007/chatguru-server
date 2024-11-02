@@ -7,6 +7,7 @@ const {
 } = require("../utils/CookieOptions");
 const { getIO } = require("../socket");
 const { formatValidationErrors } = require("../helpers/formatValidationErrors");
+const uploadFileToCloudinary = require("../utils/cloudinary");
 
 //! GENERATE AUTH TOKENS FOR USER
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -29,7 +30,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
 };
 
 //! @description     Register New User
-//! @route           POST /api/v1/user/register
+//! @route           POST /api/v1/users/register
 //! @access          Public
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
@@ -94,7 +95,7 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 //! @description     Login User
-//! @route           POST /api/v1/user/login
+//! @route           POST /api/v1/users/login
 //! @access          Public
 const loginUser = asyncHandler(async (req, res) => {
   const { userInput, password } = req.body;
@@ -162,7 +163,7 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 //! @description     Logout User
-//! @route           GET /api/v1/user/logout
+//! @route           GET /api/v1/users/logout
 //! @access          Protected
 const logoutUser = asyncHandler(async (req, res) => {
   // console.log("USER =>", req?.user);
@@ -191,7 +192,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 //! @description     Renew Access Token
-//! @route           POST /api/v1/user/renew-token
+//! @route           POST /api/v1/users/renew-token
 //! @access          Public/Protected
 const renewAccessToken = asyncHandler(async (req, res) => {
   // console.log(req.cookies);
@@ -248,8 +249,77 @@ const renewAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
+//! @description     Update user => username/image
+//! @route           PATCH /api/v1/users/profile
+//! @access          Protected
+const updateProfile = asyncHandler(async (req, res) => {
+  const userId = req?.user.id;
+
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Unauthorized Request" });
+  }
+
+  const localFilePath = req.file?.path;
+  const avatarImage = await uploadFileToCloudinary(localFilePath, "image");
+
+  try {
+    const currUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          username: req.body?.username,
+          avatarImage: avatarImage?.url,
+        },
+      },
+      { new: true, runValidators: true }
+    ).select("-password -refreshToken");
+
+    res
+      .status(200)
+      .json({ success: true, message: "user updated", user: currUser });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+//! @description     Remove Profile Image
+//! @route           PATCH /api/v1/users/profile-image
+//! @access          Protected
+const removeProfileImage = asyncHandler(async (req, res) => {
+  const userId = req?.user.id;
+
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Unauthorized Request" });
+  }
+
+  try {
+    const currUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          avatarImage: "",
+        },
+      },
+      { new: true, runValidators: true }
+    ).select("-password -refreshToken");
+
+    res.status(200).json({
+      success: true,
+      message: "profile image removed",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
 //! @description     List of all Users
-//! @route           GET /api/v1/user/all
+//! @route           GET /api/v1/users/all
 //! @access          Protected
 const allUsers = asyncHandler(async (req, res) => {
   try {
@@ -271,6 +341,8 @@ module.exports = {
   registerUser,
   loginUser,
   logoutUser,
+  updateProfile,
+  removeProfileImage,
   renewAccessToken,
   allUsers,
 };

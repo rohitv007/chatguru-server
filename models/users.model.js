@@ -13,6 +13,8 @@ const userSchema = new Schema(
       unique: [true, "Username already taken! Please provide a new username"],
       lowercase: true,
       trim: true,
+      minLength: 4,
+      maxLength: 16,
       index: true,
     },
     email: {
@@ -28,15 +30,11 @@ const userSchema = new Schema(
       required: [true, "Please provide a password"],
       // validate: [isStrongPassword, "Please enter a strong password"],
     },
-    pic: {
+    avatarImage: {
       type: String,
-      required: true,
-      default:
-        "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
     },
     isAdmin: {
       type: Boolean,
-      required: true,
       default: false,
     },
     refreshToken: {

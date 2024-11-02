@@ -3,14 +3,12 @@ const path = require("path");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/");
+    cb(null, "uploads/avatars");
   },
   filename: (req, file, cb) => {
-    console.log("middleware", file);
-    cb(
-      null,
-      Date.now() + "_" + file.originalname + path.extname(file.originalname)
-    );
+    // console.log("middleware file:", file);
+    const fileName = Date.now() + "_" + file.originalname;
+    cb(null, fileName);
   },
 });
 

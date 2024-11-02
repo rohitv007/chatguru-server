@@ -30,9 +30,9 @@ app.get("/", (req, res) => {
   res.send("Home Page");
 });
 
-app.use("/api/v1/user", userRoutes);
-app.use("/api/v1/chat", chatRoutes);
-app.use("/api/v1/message", messageRoutes);
+app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/chats", chatRoutes);
+app.use("/api/v1/messages", messageRoutes);
 
 app.get(
   "/api/v1/profile",
