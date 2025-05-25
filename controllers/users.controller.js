@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const User = require("../models/users.model");
 const {
   accessCookieOptions,
@@ -8,6 +9,8 @@ const {
 const { getIO } = require("../socket");
 const { formatValidationErrors } = require("../helpers/formatValidationErrors");
 const uploadFileToCloudinary = require("../utils/cloudinary");
+const sendEmail = require("../utils/sendEmail");
+const resetPasswordEmailTemplate = require("../templates/resetPasswordEmail");
 
 //! GENERATE AUTH TOKENS FOR USER
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -191,6 +194,109 @@ const logoutUser = asyncHandler(async (req, res) => {
   }
 });
 
+//! @description     Forgot Password - Send Reset Email
+//! @route           POST /api/v1/users/forgot-password
+//! @access          Public
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({
+      success: false,
+      message: "Email is required",
+    });
+  }
+
+  // Always return the same response regardless of whether user exists
+  const standardResponse = {
+    success: true,
+    message:
+      "If this email is registered with us, you'll receive a password reset link shortly.",
+  };
+
+  try {
+    const existingUser = await User.findOne({
+      email: email.toLowerCase().trim(),
+    });
+
+    if (existingUser) {
+      const resetToken = crypto.randomBytes(32).toString("hex");
+
+      // Set token expiration (15 minutes from now)
+      const expiryMinutes = 15;
+      const resetTokenExpiry = new Date(Date.now() + expiryMinutes * 60 * 1000);
+
+      existingUser.resetPasswordToken = resetToken;
+      existingUser.resetPasswordExpiry = resetTokenExpiry;
+      await existingUser.save();
+
+      const resetUrl = `${process.env.APP_CLIENT_URL}/reset-password?token=${resetToken}`;
+
+      const emailHtml = resetPasswordEmailTemplate(
+        existingUser.username,
+        resetUrl,
+        expiryMinutes
+      );
+
+      const emailResult = await sendEmail({
+        to: email,
+        subject: `Password Reset Request - ${
+          process.env.APP_NAME || "ChatGuru"
+        }`,
+        html: emailHtml,
+      });
+
+      console.log(`Password reset token for ${email}: ${resetToken}`);
+
+      // Log success (but don't expose to user)
+      if (emailResult.success) {
+        console.log(`Password reset email sent successfully to: ${email}`);
+      } else {
+        console.log(
+          `Password reset email failed for: ${email} - ${emailResult.error}`
+        );
+      }
+    }
+
+    res.status(200).json(standardResponse);
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(200).json(standardResponse);
+  }
+});
+
+//! @description     Reset Password with Token
+//! @route           POST /api/v1/users/reset-password
+//! @access          Public
+const resetPassword = asyncHandler(async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  // Find user with valid token
+  const user = await User.findOne({
+    resetPasswordToken: token,
+    resetPasswordExpiry: { $gt: Date.now() }, // Token not expired
+  });
+
+  if (!user) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid or expired reset token",
+    });
+  }
+
+  // Update password and clear reset token
+  user.password = newPassword;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpiry = undefined;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message:
+      "Password reset successful. You can now login with your new password.",
+  });
+});
+
 //! @description     Renew Access Token
 //! @route           POST /api/v1/users/renew-token
 //! @access          Public/Protected
@@ -337,10 +443,17 @@ const allUsers = asyncHandler(async (req, res) => {
   }
 });
 
+const userExistsInDb = () => {
+  if (!existingUser) return null;
+  else return existingUser;
+};
+
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
+  forgotPassword,
+  resetPassword,
   updateProfile,
   removeProfileImage,
   renewAccessToken,
