@@ -1,9 +1,9 @@
 const { Router } = require("express");
+const verifyJWT = require("../middlewares/auth.middleware");
 const {
   fetchMessages,
   sendMessage,
 } = require("../controllers/messages.controller");
-const { verifyJWT } = require("../middlewares/auth.middleware");
 
 const router = Router();
 

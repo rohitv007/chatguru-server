@@ -40,6 +40,14 @@ const userSchema = new Schema(
     refreshToken: {
       type: String,
     },
+    resetPasswordToken: {
+      type: String,
+      default: undefined,
+    },
+    resetPasswordExpiry: {
+      type: Date,
+      default: undefined,
+    },
   },
   {
     timestamps: true,

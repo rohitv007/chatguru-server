@@ -1,5 +1,5 @@
 const { Router } = require("express");
-const { verifyJWT } = require("../middlewares/auth.middleware");
+const verifyJWT = require("../middlewares/auth.middleware");
 const {
   accessChat,
   fetchChats,

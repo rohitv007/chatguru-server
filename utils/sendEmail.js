@@ -1,15 +1,19 @@
 const nodemailer = require("nodemailer");
 
 const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: 465,
-    secure: true,
+  const isDevelopment = process.env.NODE_ENV === "development";
+
+  const config = {
+    host: "smtp.gmail.com",
+    port: isDevelopment ? 587 : 465,
+    secure: !isDevelopment,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
-  });
+  };
+
+  return nodemailer.createTransport(config);
 };
 
 const sendEmail = async (options) => {

@@ -10,8 +10,9 @@ const {
   forgotPassword,
   resetPassword,
 } = require("../controllers/users.controller");
-const { verifyJWT } = require("../middlewares/auth.middleware");
+const verifyJWT = require("../middlewares/auth.middleware");
 const upload = require("../middlewares/multer.middleware");
+const forgotPasswordLimiter = require("../middlewares/rateLimiter.middleware");
 
 const router = Router();
 
@@ -21,7 +22,7 @@ router
   .route("/profile")
   .patch(verifyJWT, upload.single("avatarImage"), updateProfile);
 router.route("/profile-image").patch(verifyJWT, removeProfileImage);
-router.route("/forgot-password").post(forgotPassword);
+router.route("/forgot-password").post(forgotPasswordLimiter, forgotPassword);
 router.route("/reset-password").post(resetPassword);
 router.route("/renew-token").post(renewAccessToken);
 router.route("/logout").get(verifyJWT, logoutUser);

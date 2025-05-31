@@ -5,6 +5,7 @@ const User = require("../models/users.model");
 const {
   accessCookieOptions,
   refreshCookieOptions,
+  clearCookieOptions,
 } = require("../utils/CookieOptions");
 const { getIO } = require("../socket");
 const { formatValidationErrors } = require("../helpers/formatValidationErrors");
@@ -185,8 +186,8 @@ const logoutUser = asyncHandler(async (req, res) => {
 
     res
       .status(200)
-      .clearCookie("accessToken", accessCookieOptions)
-      .clearCookie("refreshToken", refreshCookieOptions)
+      .clearCookie("accessToken", clearCookieOptions)
+      .clearCookie("refreshToken", clearCookieOptions)
       .json({ success: true, message: "Logged Out Successfully!" });
   } catch (error) {
     console.error("Error during logout:", error);
@@ -277,10 +278,14 @@ const resetPassword = asyncHandler(async (req, res) => {
     resetPasswordExpiry: { $gt: Date.now() }, // Token not expired
   });
 
+  // console.log("Reset Password Token:", token);
+  // console.log("User Found:", user ? user.username : "No user found");
+
   if (!user) {
     return res.status(400).json({
       success: false,
-      message: "Invalid or expired reset token",
+      message:
+        "Your password reset link is invalid or has expired. Please request a new one.",
     });
   }
 
@@ -290,11 +295,7 @@ const resetPassword = asyncHandler(async (req, res) => {
   user.resetPasswordExpiry = undefined;
   await user.save();
 
-  res.status(200).json({
-    success: true,
-    message:
-      "Password reset successful. You can now login with your new password.",
-  });
+  res.json({ success: true, message: "Password reset successful." });
 });
 
 //! @description     Renew Access Token

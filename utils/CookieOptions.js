@@ -29,4 +29,14 @@ const refreshCookieOptions = {
   maxAge: refreshExpiry * 1000, // milliseconds
 };
 
-module.exports = { accessCookieOptions, refreshCookieOptions };
+const clearCookieOptions = {
+  httpOnly: true,
+  secure: isProduction, // Only true in prod
+  sameSite: isProduction ? "None" : "Lax", // Lax for non-prod, None for prod
+};
+
+module.exports = {
+  accessCookieOptions,
+  refreshCookieOptions,
+  clearCookieOptions,
+};
